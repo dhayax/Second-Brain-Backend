@@ -1,9 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
-import { UserModel } from "./db";
+import { ContentModel, UserModel } from "./db";
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
+import { userMiddleware } from "./middleware";
 dotenv.config();
 
 const JWT_PASSWORD = process.env.JWT_SECRET as string;
@@ -15,11 +16,11 @@ const app = express();
 app.use(express.json());
 app.post("/api/v1/signup", async (req, res) => {
   const { username, password } = req.body;
-  
+
   try {
     await UserModel.create({
       username,
-      password
+      password,
     });
 
     res.json({
@@ -54,7 +55,36 @@ app.post("/api/v1/signin", async (req, res) => {
     });
   }
 });
-app.post("/api/v1/content", (req, res) => {});
+// app.post("/api/v1/content", userMiddleware, async (req, res) => {
+//   const { link, type } = req.body;
+//   await ContentModel.create({
+//     link,
+//     type,
+//     //@ts-ignore
+//     userId: req.userId,
+//     tags:[]
+//   });
+
+//   return res.json({
+//     message:"Content Added"
+//   })
+// });
+
+app.post("/api/v1/content", userMiddleware, async (req, res) => {
+  const link = req.body.link;
+  const title = req.body.title;
+  await ContentModel.create({
+    title,
+    link,
+
+    //@ts-ignore
+    userId: req.userId,
+    tags: [],
+  });
+  res.json({
+    message: "content added",
+  });
+});
 app.get("/api/v1/content", (req, res) => {});
 app.delete("/api/v1/content", (req, res) => {});
 
